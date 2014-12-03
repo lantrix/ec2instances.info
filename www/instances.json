@@ -734,6 +734,10 @@
         "mswin": "0.022",
         "linux": "0.017"
       },
+      "eu-central-1": {
+        "mswin": "0.020",
+        "linux": "0.015"
+      },
       "eu-west-1": {
         "mswin": "0.019",
         "linux": "0.014"
@@ -785,6 +789,10 @@
         "mswin": "0.044",
         "linux": "0.034"
       },
+      "eu-central-1": {
+        "mswin": "0.040",
+        "linux": "0.030"
+      },
       "eu-west-1": {
         "mswin": "0.038",
         "linux": "0.028"
@@ -835,6 +843,10 @@
       "us-west-1": {
         "mswin": "0.088",
         "linux": "0.068"
+      },
+      "eu-central-1": {
+        "mswin": "0.080",
+        "linux": "0.060"
       },
       "eu-west-1": {
         "mswin": "0.076",
@@ -891,6 +903,10 @@
         "mswin": "0.140",
         "linux": "0.077"
       },
+      "eu-central-1": {
+        "mswin": "0.146",
+        "linux": "0.083"
+      },
       "eu-west-1": {
         "mswin": "0.133",
         "linux": "0.077"
@@ -945,6 +961,10 @@
       "us-west-1": {
         "mswin": "0.280",
         "linux": "0.154"
+      },
+      "eu-central-1": {
+        "mswin": "0.292",
+        "linux": "0.166"
       },
       "eu-west-1": {
         "mswin": "0.266",
@@ -1001,6 +1021,10 @@
         "mswin": "0.560",
         "linux": "0.308"
       },
+      "eu-central-1": {
+        "mswin": "0.584",
+        "linux": "0.332"
+      },
       "eu-west-1": {
         "mswin": "0.532",
         "linux": "0.308"
@@ -1055,6 +1079,10 @@
       "us-west-1": {
         "mswin": "1.120",
         "linux": "0.616"
+      },
+      "eu-central-1": {
+        "mswin": "1.169",
+        "linux": "0.665"
       },
       "eu-west-1": {
         "mswin": "1.064",
@@ -1111,6 +1139,10 @@
         "mswin": "0.188",
         "linux": "0.120"
       },
+      "eu-central-1": {
+        "mswin": "0.212",
+        "linux": "0.129"
+      },
       "eu-west-1": {
         "mswin": "0.188",
         "linux": "0.120"
@@ -1165,6 +1197,10 @@
       "us-west-1": {
         "mswin": "0.376",
         "linux": "0.239"
+      },
+      "eu-central-1": {
+        "mswin": "0.424",
+        "linux": "0.258"
       },
       "eu-west-1": {
         "mswin": "0.376",
@@ -1221,6 +1257,10 @@
         "mswin": "0.752",
         "linux": "0.478"
       },
+      "eu-central-1": {
+        "mswin": "0.848",
+        "linux": "0.516"
+      },
       "eu-west-1": {
         "mswin": "0.752",
         "linux": "0.478"
@@ -1275,6 +1315,10 @@
       "us-west-1": {
         "mswin": "1.504",
         "linux": "0.956"
+      },
+      "eu-central-1": {
+        "mswin": "1.696",
+        "linux": "1.032"
       },
       "eu-west-1": {
         "mswin": "1.504",
@@ -1331,6 +1375,10 @@
         "mswin": "3.008",
         "linux": "1.912"
       },
+      "eu-central-1": {
+        "mswin": "3.392",
+        "linux": "2.064"
+      },
       "eu-west-1": {
         "mswin": "3.008",
         "linux": "1.912"
@@ -1381,6 +1429,10 @@
       "us-west-1": {
         "mswin": "0.819",
         "linux": "0.702"
+      },
+      "eu-central-1": {
+        "mswin": "N/A",
+        "linux": null
       },
       "eu-west-1": {
         "mswin": "0.767",
@@ -1433,6 +1485,10 @@
         "mswin": "0.330",
         "linux": "0.195"
       },
+      "eu-central-1": {
+        "mswin": "0.335",
+        "linux": "0.210"
+      },
       "eu-west-1": {
         "mswin": "0.300",
         "linux": "0.195"
@@ -1483,6 +1539,10 @@
       "us-west-1": {
         "mswin": "0.652",
         "linux": "0.390"
+      },
+      "eu-central-1": {
+        "mswin": "0.671",
+        "linux": "0.421"
       },
       "eu-west-1": {
         "mswin": "0.600",
@@ -1535,6 +1595,10 @@
         "mswin": "1.173",
         "linux": "0.780"
       },
+      "eu-central-1": {
+        "mswin": "1.222",
+        "linux": "0.842"
+      },
       "eu-west-1": {
         "mswin": "1.080",
         "linux": "0.780"
@@ -1585,6 +1649,10 @@
       "us-west-1": {
         "mswin": "2.111",
         "linux": "1.560"
+      },
+      "eu-central-1": {
+        "mswin": "2.228",
+        "linux": "1.684"
       },
       "eu-west-1": {
         "mswin": "1.944",
@@ -1637,6 +1705,10 @@
         "mswin": "3.800",
         "linux": "3.120"
       },
+      "eu-central-1": {
+        "mswin": "4.069",
+        "linux": "3.369"
+      },
       "eu-west-1": {
         "mswin": "3.500",
         "linux": "3.120"
@@ -1687,6 +1759,10 @@
       "us-west-1": {
         "mswin": "1.058",
         "linux": "0.938"
+      },
+      "eu-central-1": {
+        "mswin": "1.133",
+        "linux": "1.013"
       },
       "eu-west-1": {
         "mswin": "0.973",
@@ -1739,6 +1815,10 @@
         "mswin": "2.116",
         "linux": "1.876"
       },
+      "eu-central-1": {
+        "mswin": "2.267",
+        "linux": "2.026"
+      },
       "eu-west-1": {
         "mswin": "1.946",
         "linux": "1.876"
@@ -1789,6 +1869,10 @@
       "us-west-1": {
         "mswin": "4.232",
         "linux": "3.751"
+      },
+      "eu-central-1": {
+        "mswin": "4.532",
+        "linux": "4.051"
       },
       "eu-west-1": {
         "mswin": "3.891",
@@ -1841,6 +1925,10 @@
         "mswin": "8.464",
         "linux": "7.502"
       },
+      "eu-central-1": {
+        "mswin": "9.064",
+        "linux": "8.102"
+      },
       "eu-west-1": {
         "mswin": "7.782",
         "linux": "7.502"
@@ -1862,7 +1950,7 @@
     "storage": {
       "ssd": false,
       "devices": 24,
-      "size": 2048
+      "size": 2000
     },
     "network_performance": "10 Gigabit",
     "instance_type": "hs1.8xlarge",
@@ -1887,6 +1975,10 @@
       "us-west-2": {
         "mswin": "4.931",
         "linux": "4.600"
+      },
+      "eu-central-1": {
+        "mswin": "N/A",
+        "linux": null
       },
       "eu-west-1": {
         "mswin": "4.931",
