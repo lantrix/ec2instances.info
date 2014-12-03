@@ -157,7 +157,7 @@ $(function() {
       return false;
     });
 
-    change_region('us-east-1');
+    change_region('ap-southeast-2');
     change_cost('hourly');
   });
 

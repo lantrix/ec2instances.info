@@ -23,15 +23,8 @@
 
   <body>
     <div class="page-header">
-      <h1>EC2Instances.info <small>Easy Amazon EC2 Instance Comparison</small></h1>
+      <h1>Amazon EC2 Instance Comparison <small>in USD</small></h1>
     </div>
-
-    <!--
-    <div class="alert">
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-      <strong>Warning!</strong> Some information on this page is outdated. Please see <a href="https://github.com/powdahound/ec2instances.info/issues/75">this issue</a> for more detail.
-    </div>
-    -->
 
     <div class="pull-left" id="filters">
       <div class="btn-group" id='region-dropdown'>
@@ -180,10 +173,6 @@
       </tbody>
     </table>
 
-    <div class="well">
-      <p>This site was created out of frustration while trying to compare EC2 instances using Amazon's <a href="http://aws.amazon.com/ec2/instance-types/" target="_blank">instance type</a> and <a href="http://aws.amazon.com/ec2/pricing/" target="_blank">pricing</a> pages.</p>
-      <p>It was started by <a href="http://twitter.com/powdahound" target="_blank">@powdahound</a>, contributed to by <a href="https://github.com/powdahound/ec2instances.info/contributors" target="_blank">many</a>, is <a href="http://powdahound.com/2011/03/hosting-a-static-site-on-amazon-s3-ec2instances-info" target="_blank">hosted on S3</a>, and awaits your improvements <a href="https://github.com/powdahound/ec2instances.info" target="_blank">on GitHub</a>.</p>
-    </div>
     <div class="well-small">
       <p class="small">Generated at: ${generated_at}</p>
     </div>
