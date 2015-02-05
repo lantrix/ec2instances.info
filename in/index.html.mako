@@ -39,6 +39,7 @@
           <li><a href="javascript:;" data-region='us-west-2'>US West (Oregon)</a></li>
           <li><a href="javascript:;" data-region='sa-east-1'>South America</a></li>
           <li><a href="javascript:;" data-region='eu-west-1'>EU (Ireland)</a></li>
+          <li><a href="javascript:;" data-region='eu-central-1'>EU (Frankfurt)</a></li>
           <li><a href="javascript:;" data-region='ap-southeast-1'>Asia-Pacific (Singapore)</a></li>
           <li><a href="javascript:;" data-region='ap-southeast-2'>Asia-Pacific (Sydney)</a></li>
           <li><a href="javascript:;" data-region='ap-northeast-1'>Asia-Pacific (Tokyo)</a></li>
@@ -63,6 +64,7 @@
       <div class="btn-group" id="filter-dropdown">
         <a class="btn dropdown-toggle btn-primary" data-toggle="dropdown" href="#">
           <i class="icon-filter icon-white"></i>
+          Columns
           <span class="caret"></span>
         </a>
         <ul class="dropdown-menu" role="menu">
@@ -81,42 +83,46 @@
       <thead>
         <tr>
           <th class="name">Name</th>
+          <th class="apiname">API Name</th>
           <th class="memory">Memory</th>
           <th class="computeunits">
-            <abbr title="One EC2 Compute Unit provides the equivalent CPU capacity of a 1.0-1.2 GHz 2007 Opteron or 2007 Xeon processor.">Compute Units</abbr>
+            <abbr title="One EC2 Compute Unit provides the equivalent CPU capacity of a 1.0-1.2 GHz 2007 Opteron or 2007 Xeon processor.">Compute Units (ECU)</abbr>
           </th>
+          <th class="cores">Cores</th>
+          <th class="ecu-per-core">ECU per Core</th>
           <th class="storage">Storage</th>
-          <th class="architecture">Architecture</th>
+          <th class="architecture">Arch</th>
           <th class="ioperf">I/O Performance</th>
           <th class="maxips">
             <abbr title="Adding additional IPs requires launching the instance in a VPC.">Max IPs</abbr>
           </th>
-          <th class="apiname">API Name</th>
+          <th class="enhanced-networking">Enhanced Networking</th>
+          <th class="linux-virtualization">Linux Virtualization</th>
           <th class="cost">Linux cost</th>
-          <th class="cost">Windows cost</th>
+          <th class="cost-mswin">Windows cost</th>
+          <th class="cost-mswinSQLWeb">Windows SQL Web cost</th>
+          <th class="cost-mswinSQL">Windows SQL Std cost</th>
         </tr>
       </thead>
       <tbody>
 % for inst in instances:
         <tr class='instance' id="${inst['instance_type']}">
           <td class="name">${inst['pretty_name']}</td>
+          <td class="apiname">${inst['instance_type']}</td>
           <td class="memory"><span sort="${inst['memory']}">${inst['memory']} GB</span></td>
           <td class="computeunits">
-            % if inst['ECU'] == 0 :
-            <span sort="0">Burstable</span>
-            % else:
-            <span sort="${inst['ECU']}">${"%g" % (inst['ECU'],)}
-              % if 'cpu_details' in inst:
-                (${inst['cpu_details']['cpus']} x
-                 <abbr title='${inst['cpu_details']['note']}'>
-                   ${inst['cpu_details']['type']}
-                 </abbr>
-                 )
-              % else:
-              (${inst['vCPU']} core x ${"%g" % (inst['ECU']/inst['vCPU'],)} unit)
-              % endif
-            </span>
+            <span sort="${inst['ECU']}">${"%g" % (inst['ECU'],)} units</span>
+            % if inst.get('burstable'):
+             (<a href="http://aws.amazon.com/ec2/instance-types/#burst" target="_blank">Burstable</a>)
             % endif
+          </td>
+          <td class="cores">
+            <span sort="${inst['vCPU']}">
+              ${inst['vCPU']} cores
+            </span>
+          </td>
+          <td class="ecu-per-core">
+            <span sort="${inst['ECU_per_core']}">${"%.4g" % inst['ECU_per_core']} units</span>
           </td>
           <td class="storage">
             <% storage = inst['storage'] %>
@@ -148,26 +154,32 @@
               % endif
             </span>
           </td>
-          % if inst['vpc']:
-          <td class="maxips">${inst['vpc']['max_enis'] * inst['vpc']['ips_per_eni']}</td>
-          % else:
-          <td class="maxips">N/A</td>
-          % endif
-          <td class="apiname">${inst['instance_type']}</td>
-          <td class="cost" data-pricing='${json.dumps({r:p.get('linux', p.get('os',0)) for r,p in inst['pricing'].iteritems()}) | h}'>
-            % if 'us-east-1' in inst['pricing']:
-                 $${inst['pricing']['us-east-1'].get('linux', inst['pricing']['us-east-1'].get('os',0))} per hour
+          <td class="maxips">
+            % if inst['vpc']:
+              ${inst['vpc']['max_enis'] * inst['vpc']['ips_per_eni']}
+            % else:
+              N/A
+            % endif
+          </td>
+          <td class="enhanced-networking">
+            ${'Yes' if inst['enhanced_networking'] else 'No'}
+          </td>
+          <td class="linux-virtualization">
+            % if inst['linux_virtualization_types']:
+            ${', '.join(inst['linux_virtualization_types'])}
+            % else:
+            Unknown
+            % endif
+          </td>
+    % for platform in ['linux', 'mswin', 'mswinSQLWeb', 'mswinSQL']:
+          <td class="cost cost-${platform}" data-pricing='${json.dumps({r:p.get(platform, p.get('os',0)) for r,p in inst['pricing'].iteritems()}) | h}'>
+            % if inst['pricing'].get('us-east-1', {}).get(platform, 'N/A') != "N/A":
+                 $${inst['pricing']['us-east-1'][platform]} per hour
             % else:
             unavailable
             % endif
           </td>
-          <td class="cost" data-pricing='${json.dumps({r:p.get('mswin', p.get('os',0)) for r,p in inst['pricing'].iteritems()}) | h}'>
-            % if 'us-east-1' in inst['pricing']:
-                $${inst['pricing']['us-east-1'].get('mswin', inst['pricing']['us-east-1'].get('os',0))} per hour
-            % else:
-            unavailable
-            % endif
-          </td>
+    % endfor
         </tr>
 % endfor
       </tbody>
@@ -177,9 +189,9 @@
       <p class="small">Generated at: ${generated_at}</p>
     </div>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="bootstrap/js/bootstrap.min.js" type="text/javascript" charset="utf-8"></script>
-    <script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.10.4/jquery.dataTables.min.js"></script>
     <script src="default.js" type="text/javascript" charset="utf-8"></script>
 
   </body>

@@ -11,9 +11,9 @@ def pretty_name(inst):
     family_names = {
         'r3': 'R3 High-Memory',
         'c3': 'C3 High-CPU',
+        'c4': 'C4 High-CPU',
         'm3': 'M3 General Purpose',
         'i3': 'I3 High I/O',
-        'cc1': 'Cluster Compute',
         'cg1': 'Cluster GPU',
         'cc2': 'Cluster Compute',
         'cr1': 'High Memory Cluster',
@@ -44,42 +44,29 @@ def pretty_name(inst):
 
 def network_sort(inst):
     perf = inst['network_performance']
-    if perf == 'Very Low':
-        sort = 0
-    elif perf == 'Low':
-        sort = 1
-    elif perf == 'Moderate':
-        sort = 2
-    elif perf == 'High':
-        sort = 3
-    elif perf == '10 Gigabit':
-        sort = 4
-    else:  ## unknown value
-        sort = 5
+    network_rank = [
+        'Very Low',
+        'Low',
+        'Low to Moderate',
+        'Moderate',
+        'High',
+        '10 Gigabit'
+        ]
+    try:
+        sort = network_rank.index(perf)
+    except ValueError:
+        sort = len(network_rank)
     sort *= 2
     if inst['ebs_optimized']:
         sort += 1
     return sort
 
 def add_cpu_detail(i):
-    if i['instance_type'] in ('cc1.4xlarge', 'cg1.4xlarge'):
-        i['cpu_details'] = {
-            'cpus': 2,
-            'type': 'Xeon X5570',
-            'note': 'Quad-core Nehalem architecture'
-            }
-    elif i['instance_type'] in ('hi1.4xlarge', 'hs1.8xlarge'):
-        i['cpu_details'] = {
-            'cpus': 2,
-            'type': 'Xeon E5-2650',
-            'note': 'Eight-core Sandy Bridge architecture'
-            }
-    elif i['instance_type'] in ('cc2.8xlarge', 'cr1.8xlarge'):
-        i['cpu_details'] = {
-            'cpus': 2,
-            'type': 'Xeon E5-2670',
-            'note': 'Eight-core Sandy Bridge architecture'
-            }
+    # special burstable instances
+    if i['instance_type'] in ('t1.micro', 't2.micro', 't2.small', 't2.medium'):
+        i['burstable'] = True
+        i['ECU'] = i['vCPU']  # a reasonable ECU to display
+    i['ECU_per_core'] = i['ECU'] / i['vCPU']
 
 def add_render_info(i):
     i['network_sort'] = network_sort(i)

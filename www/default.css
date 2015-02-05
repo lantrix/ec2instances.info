@@ -14,6 +14,11 @@ body {
   clear: both;
 }
 
+#data a {
+  color: #333;
+  text-decoration: underline;
+}
+
 #data tr {
     background-color:white;
     cursor:pointer;
@@ -21,6 +26,10 @@ body {
 
 #data tr.highlight, #data tr.highlight:hover {
     background-color:#D3FFFF;
+}
+
+#data th, #data td {
+  white-space: nowrap;
 }
 
 #data td {
@@ -88,10 +97,20 @@ table.table thead .sorting_desc_disabled {
   cursor: pointer;
   *cursor: hand;
 }
- 
+
 table.table thead .sorting { background: url('datatables/images/sort_both.png') no-repeat center right; }
 table.table thead .sorting_asc { background: url('datatables/images/sort_asc.png') no-repeat center right; }
 table.table thead .sorting_desc { background: url('datatables/images/sort_desc.png') no-repeat center right; }
- 
+
 table.table thead .sorting_asc_disabled { background: url('datatables/images/sort_asc_disabled.png') no-repeat center right; }
 table.table thead .sorting_desc_disabled { background: url('datatables/images/sort_desc_disabled.png') no-repeat center right; }
+
+input[type=search] {
+  margin-left: 5px;
+}
+
+/* Bootstrap overrides *******************************************************/
+.tooltip-inner {
+  /* let text wrap in tooltips */
+  white-space: pre-wrap;
+}
