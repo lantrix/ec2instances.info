@@ -2,15 +2,28 @@ body {
   padding: 5px 20px;
 }
 
+.ec2instances .page-header {
+  margin-top: 0;
+}
+
 .dataTables_filter {
   float: right;
 }
 
-#filters {
-  height: 50px;
+#menu {
+  margin-bottom: 10px;
 }
 
+#filters {
+  margin-bottom: 10px;
+}
+
+  #filters input {
+    width: 5rem;
+  }
+
 #data {
+  margin-top: 10px;
   clear: both;
 }
 
@@ -88,6 +101,10 @@ body {
   padding: 3px 0px;
 }
 
+.well p:last-child {
+  margin-bottom: 0;
+}
+
 /* DataTables: http://datatables.net/blog/Twitter_Bootstrap_2 */
 table.table thead .sorting,
 table.table thead .sorting_asc,
@@ -105,8 +122,11 @@ table.table thead .sorting_desc { background: url('datatables/images/sort_desc.p
 table.table thead .sorting_asc_disabled { background: url('datatables/images/sort_asc_disabled.png') no-repeat center right; }
 table.table thead .sorting_desc_disabled { background: url('datatables/images/sort_desc_disabled.png') no-repeat center right; }
 
-input[type=search] {
+/* This class is applied to the DataTables search box by our own code once it renders */
+input.search {
   margin-left: 5px;
+  width: 150px;
+  display: inline;
 }
 
 /* Bootstrap overrides *******************************************************/

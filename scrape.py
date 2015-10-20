@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from lxml import etree
 import urllib2
 import re
@@ -10,6 +11,9 @@ class Instance(object):
         self.arch = ['x86_64']
         self.ECU = 0
         self.linux_virtualization_types = []
+        self.ebs_throughput = 0
+        self.ebs_iops = 0
+        self.max_bandwidth = 0
 
     def to_dict(self):
         d = dict(family=self.family,
@@ -19,6 +23,9 @@ class Instance(object):
                  ECU=self.ECU,
                  memory=self.memory,
                  ebs_optimized=self.ebs_optimized,
+                 ebs_throughput=self.ebs_throughput,
+                 ebs_iops=self.ebs_iops,
+                 max_bandwidth=self.max_bandwidth,
                  network_performance=self.network_performance,
                  enhanced_networking=self.enhanced_networking,
                  pricing=self.pricing,
@@ -116,27 +123,30 @@ def _rindex_family(inst2family, details):
 def scrape_families():
     inst2family = dict()
     tree = etree.parse(urllib2.urlopen("http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html"), etree.HTMLParser())
-    details = tree.xpath('//table')[3]
+    details = tree.xpath('//div[@class="informaltable"]//table')[0]
     hdrs = details.xpath('thead/tr')[0]
     if totext(hdrs[0]).lower() == 'instance family' and 'current generation' in totext(hdrs[1]).lower():
        _rindex_family(inst2family, details)
-    details = tree.xpath('//table')[4]
+
+    details = tree.xpath('//div[@class="informaltable"]//table')[1]
     hdrs = details.xpath('thead/tr')[0]
     if totext(hdrs[0]).lower() == 'instance family' and 'previous generation' in totext(hdrs[1]).lower():
        _rindex_family(inst2family, details)
+
+    assert len(inst2family) > 0, "Failed to find instance family info"
     return inst2family
 
 
 def scrape_instances():
     inst2family = scrape_families()
     tree = etree.parse(urllib2.urlopen("http://aws.amazon.com/ec2/instance-types/"), etree.HTMLParser())
-    details = tree.xpath('//table')[8]
+    details = tree.xpath('//table')[9]
     rows = details.xpath('tbody/tr')[1:]
     assert len(rows) > 0, "Didn't find any table rows."
     current_gen = [parse_instance(r, inst2family) for r in rows]
 
     tree = etree.parse(urllib2.urlopen("http://aws.amazon.com/ec2/previous-generation/"), etree.HTMLParser())
-    details = tree.xpath('//table')[5]
+    details = tree.xpath('//table')[6]
     rows = details.xpath('tbody/tr')[1:]
     assert len(rows) > 0, "Didn't find any table rows."
     prev_gen = [parse_prev_generation_instance(r) for r in rows]
@@ -178,7 +188,13 @@ def transform_region(reg):
     return base + "-" + num
 
 
-def add_pricing(imap, data, platform):
+def add_pricing(imap, data, platform, pricing_mode):
+    if pricing_mode == 'od':
+        add_ondemand_pricing(imap, data, platform)
+    elif pricing_mode == 'ri':
+        add_reserved_pricing(imap, data, platform)
+
+def add_ondemand_pricing(imap, data, platform):
     for region_spec in data['config']['regions']:
         region = transform_region(region_spec['region'])
         for t_spec in region_spec['instanceTypes']:
@@ -193,8 +209,10 @@ def add_pricing(imap, data, platform):
                 inst = imap[i_type]
                 inst.pricing.setdefault(region, {})
                 # print "%s/%s" % (region, i_type)
+
+                inst.pricing[region].setdefault(platform, {})
                 for col in i_spec['valueColumns']:
-                    inst.pricing[region][platform] = col['prices']['USD']
+                    inst.pricing[region][platform]['ondemand'] = col['prices']['USD']
 
                 # ECU is only available here
                 ecu = i_spec['ECU']
@@ -203,30 +221,88 @@ def add_pricing(imap, data, platform):
                 else:
                     inst.ECU = float(ecu)
 
+def add_reserved_pricing(imap, data, platform):
+    for region_spec in data['config']['regions']:
+        region = transform_region(region_spec['region'])
+        for t_spec in region_spec['instanceTypes']:
+            i_type = t_spec['type']
+            # As best I can tell, this type doesn't exist, but is
+            # in the pricing charts anyways.
+            if i_type == 'cc2.4xlarge':
+                continue
+            assert i_type in imap, "Unknown instance size: %s" % (i_type, )
+            inst = imap[i_type]
+            inst.pricing.setdefault(region, {})
+            # print "%s/%s" % (region, i_type)
+            inst.pricing[region].setdefault(platform, {})
+            inst.pricing[region][platform].setdefault('reserved', {})
+
+            termPricing = {}
+
+            for term in t_spec['terms']:
+                for po in term['purchaseOptions']:
+                    for value in po['valueColumns']:
+                        if value['name'] == 'effectiveHourly':
+                            termPricing[term['term'] + '.' + po['purchaseOption']] = value['prices']['USD']
+
+            inst.pricing[region][platform]['reserved'] = termPricing
+
 
 def add_pricing_info(instances):
+
+    pricing_modes = ['ri', 'od']
+
+    reserved_name_map = {
+        'linux': 'linux-unix-shared',
+        'mswin': 'windows-shared',
+        'mswinSQL': 'windows-with-sql-server-standard-shared',
+        'mswinSQLWeb': 'windows-with-sql-server-web-shared'
+    }
+
     for i in instances:
         i.pricing = {}
+
     by_type = {i.instance_type: i for i in instances}
 
-    for platform in ['linux', 'mswin', 'mswinSQL', 'mswinSQLWeb']:
-        # current generation
-        pricing_url = 'http://aws.amazon.com/ec2/pricing/json/%s-od.json' % (platform,)
-        pricing = json.loads(urllib2.urlopen(pricing_url).read())
-        add_pricing(by_type, pricing, platform)
 
-        # previous generation
-        pricing_url = 'http://a0.awsstatic.com/pricing/1/ec2/previous-generation/%s-od.min.js' % (platform,)
-        jsonp_string = urllib2.urlopen(pricing_url).read()
-        json_string = re.sub(r"(\w+):", r'"\1":', jsonp_string[jsonp_string.index('callback(') + 9 : -2]) # convert into valid json
+
+    for platform in ['linux', 'mswin', 'mswinSQL', 'mswinSQLWeb']:
+        for pricing_mode in pricing_modes:
+            # current generation
+            if pricing_mode == 'od':
+                pricing_url = 'https://a0.awsstatic.com/pricing/1/deprecated/ec2/%s-od.json' % (platform,)
+            else:
+                pricing_url = 'http://a0.awsstatic.com/pricing/1/ec2/ri-v2/%s.min.js' % (reserved_name_map[platform],)
+
+
+            pricing = fetch_data(pricing_url)
+            add_pricing(by_type, pricing, platform, pricing_mode)
+
+            # previous generation
+            if pricing_mode == 'od':
+                pricing_url = 'http://a0.awsstatic.com/pricing/1/ec2/previous-generation/%s-od.min.js' % (platform,)
+            else:
+                pricing_url = 'http://a0.awsstatic.com/pricing/1/ec2/previous-generation/ri-v2/%s.min.js' % (reserved_name_map[platform],)
+
+            pricing = fetch_data(pricing_url)
+            add_pricing(by_type, pricing, platform, pricing_mode)
+
+def fetch_data(url):
+    content = urllib2.urlopen(url).read()
+    try:
+        pricing = json.loads(content)
+    except ValueError:
+        # if the data isn't compatiable JSON, try to parse as jsonP
+        json_string = re.sub(r"(\w+):", r'"\1":', content[content.index('callback(') + 9 : -2]) # convert into valid json
         pricing = json.loads(json_string)
-        add_pricing(by_type, pricing, platform)
+
+    return pricing
 
 
 def add_eni_info(instances):
     eni_url = "http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html"
     tree = etree.parse(urllib2.urlopen(eni_url), etree.HTMLParser())
-    table = tree.xpath('//div[@id="divContent"]/div[@class="section"]//table[.//code[contains(., "cc2.8xlarge")]]')[0]
+    table = tree.xpath('//div[@class="informaltable"]//table')[0]
     rows = table.xpath('.//tr[./td]')
     by_type = {i.instance_type: i for i in instances}
 
@@ -240,6 +316,29 @@ def add_eni_info(instances):
         by_type[instance_type].vpc = {
             'max_enis': max_enis,
             'ips_per_eni': ip_per_eni}
+
+
+def add_ebs_info(instances):
+    ebs_url = "http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSOptimized.html"
+    tree = etree.parse(urllib2.urlopen(ebs_url), etree.HTMLParser())
+    table = tree.xpath('//div[@class="informaltable"]//table')[0]
+    rows = table.xpath('tbody/tr')
+    by_type = {i.instance_type: i for i in instances}
+
+    for row in rows:
+        cols = row.xpath('td')
+        instance_type = totext(cols[0]).split(' ')[0]
+        ebs_optimized_by_default = totext(cols[1]) == 'Yes'
+        ebs_throughput = int(totext(cols[2]).strip().replace(',', ''))
+        ebs_iops = int(totext(cols[3]).strip().replace(',', ''))
+        max_bandwidth = float(totext(cols[4]).strip().replace(',', ''))
+        if instance_type not in by_type:
+            print "Unknown instance type: " + instance_type
+            continue
+        by_type[instance_type].ebs_optimized_by_default = ebs_optimized_by_default
+        by_type[instance_type].ebs_throughput = ebs_throughput
+        by_type[instance_type].ebs_iops = ebs_iops
+        by_type[instance_type].max_bandwidth = max_bandwidth
 
 
 def add_linux_ami_info(instances):
@@ -267,10 +366,6 @@ def add_linux_ami_info(instances):
             supported_types.append('HVM')
         if totext(r[3]) == checkmark_char:
             supported_types.append('PV')
-        # G2 instances are special. Maybe we want a separate flag here in the
-        # future? Let's see how AWS evolves...
-        if totext(r[5]) == checkmark_char:
-            supported_types.append('HVM (Graphics)')
 
         # Apply types for this instance family to all matching instances
         for i in instances:
@@ -287,6 +382,8 @@ def scrape(data_file):
     add_pricing_info(all_instances)
     print "Parsing ENI info..."
     add_eni_info(all_instances)
+    print "Parsing EBS info..."
+    add_ebs_info(all_instances)
     print "Parsing Linux AMI info..."
     add_linux_ami_info(all_instances)
     with open(data_file, 'w') as f:
